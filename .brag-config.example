@@ -1,0 +1,31 @@
+# .brag-config
+
+# Configuração do fluxo de Brag Document
+
+# Preencha com seus dados e salve na pasta raiz do seu projeto brag-documents.
+
+# ATENÇÃO: não versione este arquivo se os repositórios forem privados ou se contiver dados sensíveis. Adicione ao .gitignore.
+
+# Link do seu Documento de Impacto no Notion
+NOTION_URL=https://www.notion.so/suaempresa/Documento-de-Impacto-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+# Seu usuário ou e-mail no Jira
+JIRA_USER=seu.email@empresa.com
+
+# Liste os repositórios GitHub separados por vírgula.
+
+# Crie uma chave REPOS\_{PREFIXO} para cada time.
+# O prefixo deve ser o mesmo usado nos cards (ex: ADM, APP).
+
+REPOS_ADMIN=suaempresa/admin-web,suaempresa/admin-api
+REPOS_APP=suaempresa/app-mobile,suaempresa/app-api
+
+# ── Quarters (opcional) ───────────────────────
+
+# Se sua empresa usa datas de quarter diferentes do padrão Jan-Mar / Abr-Jun / Jul-Set / Out-Dez, defina aqui para sobrescrever o mapeamento padrão.
+
+# Formato: QUARTER*{Q}*{ANO}=YYYY-MM-DD,YYYY-MM-DD
+
+# QUARTER_Q1_26=2026-02-01,2026-04-30
+
+# QUARTER_Q2_26=2026-05-01,2026-07-31
