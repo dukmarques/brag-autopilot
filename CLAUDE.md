@@ -13,12 +13,12 @@ Não há codebase tradicional aqui — sem build, lint ou testes. O projeto é c
 O fluxo é um pipeline de três etapas orquestrado por um único command:
 
 ```
-/brag Q1/26 ADM [--sprint "Sprint 5"] [--publish] [--items 1,3,5] [--dry-run]
+/brag Q1/26 [--sprint "Sprint 5"] [--publish] [--items 1,3,5] [--dry-run]
   │
   ├── skill brag-triage
   │     Usa: MCP Jira (busca de cards) + GitHub CLI (gh pr list/view/diff)
   │     Pergunta: quarter inteiro ou sprint específica (se --sprint não foi passado)
-  │     Saída: arquivo {TEAM}_{QUARTER}.md agrupado por sprint (ex: ADM_Q1-26.md)
+  │     Saída: arquivo triagens/{QUARTER}.md agrupado por sprint (ex: triagens/Q1-26.md)
   │
   ├── Pausa para revisão humana (pulada com --publish)
   │
@@ -39,7 +39,7 @@ O fluxo é um pipeline de três etapas orquestrado por um único command:
 `.brag-config` (formato key=value, parseado pelo command):
 - `NOTION_URL` — URL da página do Documento de Impacto no Notion
 - `JIRA_USER` — e-mail/usuário no Jira para consulta de cards atribuídos
-- `REPOS_{TEAM}` — repositórios GitHub separados por vírgula, por prefixo de time (ex: `REPOS_ADM=org/repo1,org/repo2`)
+- `REPOS` — todos os repositórios GitHub, separados por vírgula (ex: `REPOS=org/repo1,org/repo2`). Não há separação por time: o Jira é consultado por todos os cards atribuídos ao `JIRA_USER`, e os PRs são buscados pela chave do card em todos os repositórios
 - `QUARTER_{Q}_{YY}` — override opcional de datas de quarter customizadas
 
 ### Dependências externas
@@ -57,6 +57,6 @@ Cinco categorias no campo `Escopo` do Notion: Contribuições de Impacto, Colabo
 
 ## Convenção do arquivo de triagem
 
-Arquivos de saída seguem o padrão `{TEAM}_{QUARTER}.md` com `/` substituído por `-` (ex: `ADM_Q1-26.md`). São gerados pela `brag-triage` e tratados como **somente leitura** pela `brag-publish`. O usuário os edita entre as duas etapas.
+Arquivos de saída ficam na pasta `triagens/` (no root) e seguem o padrão `{QUARTER}.md` com `/` substituído por `-` (ex: `triagens/Q1-26.md`). São gerados pela `brag-triage` e tratados como **somente leitura** pela `brag-publish`. O usuário os edita entre as duas etapas.
 
 O arquivo é **agrupado por sprint**: seção "Elegíveis" usa `### Sprint X` (H3) como delimitador de grupo e `#### [N]` (H4) para cada item. A numeração é sequencial global.

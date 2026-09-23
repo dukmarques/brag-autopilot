@@ -37,8 +37,8 @@ Você receberá os seguintes parâmetros ao ser invocado:
 - `$QUARTER` — ex: Q1/26
 - `$PERIOD_START` — data de início do quarter (ex: 2026-01-01)
 - `$PERIOD_END` — data de fim do quarter (ex: 2026-03-31)
-- `$TEAMS` — times separados por vírgula (ex: ADM, APP)
-- `$REPOS` — repositórios GitHub separados por vírgula (ex: suaempresa/admin-web, suaempresa/app-mobile)
+- `$REPOS` — todos os repositórios GitHub, separados por vírgula (ex: suaempresa/admin-web, suaempresa/app-mobile)
+- `$JIRA_USER` — usuário ou e-mail no Jira
 - `$SPRINT` _(opcional)_ — nome da sprint específica (ex: Sprint 5). Se não fornecido, a skill pergunta ao usuário na Etapa 0.
 
 ---
@@ -54,7 +54,7 @@ Antes de iniciar o levantamento, determine o modo de busca:
 **Se `$SPRINT` não foi fornecido**, pergunte ao usuário:
 
 ```
-Como deseja rastrear as entregas de $QUARTER ($TEAM)?
+Como deseja rastrear as entregas de $QUARTER?
   [1] Quarter inteiro — todas as sprints de $PERIOD_START a $PERIOD_END
   [2] Sprint específica — informe o nome da sprint (ex: Sprint 5)
 ```
@@ -67,16 +67,14 @@ O modo escolhido afeta o filtro JQL na Etapa 1 e o formato do arquivo de saída.
 
 ### 1. Levantamento no Jira
 
-Para cada time em `$TEAMS`:
-
-- Busque todos os cards onde sou assignee no projeto correspondente
+- Busque todos os cards onde `$JIRA_USER` é assignee, sem filtrar por projeto
 
 **Se modo quarter inteiro** (sem `$SPRINT`):
 - Filtre pelos cards resolvidos/entregues entre `$PERIOD_START` e `$PERIOD_END`
 - Extraia o campo `sprint` de cada card para usar no agrupamento do arquivo de saída
 
 **Se modo sprint específica** (com `$SPRINT`):
-- Use JQL com `sprint = "$SPRINT"` combinado com assignee e projeto
+- Use JQL com `sprint = "$SPRINT"` combinado com assignee
 - Ainda valide que os cards estão dentro do range `$PERIOD_START` a `$PERIOD_END`
 
 Em ambos os modos:
@@ -92,10 +90,10 @@ Em ambos os modos:
 Para cada card levantado, localize o PR usando (em ordem de prioridade):
 
 1. Link direto anexado no card do Jira
-2. Título do PR contendo o prefixo `TEAM-XXX` (ex: ADM-123, APP-456)
-3. Nome da branch contendo o prefixo `TEAM-XXX`
+2. Título do PR contendo a chave do card (ex: ADM-123, AP-456)
+3. Nome da branch contendo a chave do card
 
-Use `gh pr list --search "TEAM-XXX" --repo $REPO` para cada repositório em `$REPOS`.
+Use `gh pr list --search "CHAVE-XXX" --repo $REPO` para cada repositório em `$REPOS`.
 Use `gh pr view <número> --repo $REPO --json title,body,files,reviews,comments,mergedAt` para detalhes.
 Use `gh pr diff <número> --repo $REPO` para analisar o tamanho e natureza das mudanças.
 
@@ -161,17 +159,17 @@ Aplique o filtro central: *"Isso gerou impacto além da minha tarefa individual?
 
 ## Saída: arquivo de triagem
 
-Ao final da análise, **crie um arquivo** no root da pasta atual com o nome:
-`TEAM_$QUARTER.md` — ex: `ADM_Q1-26.md`, `APP_Q1-26.md`.
+Ao final da análise, **crie um arquivo** na pasta `triagens/` (no root do projeto) com o nome:
+`$QUARTER.md` — ex: `triagens/Q1-26.md`.
 
-Se `$TEAMS` contiver múltiplos times, crie um arquivo por time.
+> Se a pasta `triagens/` não existir, crie-a antes de gravar o arquivo.
 
 > Use `/` substituído por `-` no nome do arquivo para evitar conflitos de path (ex: Q1/26 → Q1-26).
 
 O arquivo deve seguir esta estrutura:
 
 ```markdown
-# Triagem Brag Document — $QUARTER ($TEAM)
+# Triagem Brag Document — $QUARTER
 _Gerado em: DATA_HORA_
 _Modo: Quarter inteiro | Sprint: $SPRINT_
 _Sprints: Sprint 4, Sprint 5, Sprint 6_
@@ -190,7 +188,7 @@ _Sprints: Sprint 4, Sprint 5, Sprint 6_
 ### Sprint 5
 
 #### [1] TÍTULO DA CONTRIBUIÇÃO
-- **Card:** TEAM-XXX | **PR:** #XXX | **Tipo:** feature | **Sprint:** Sprint 5
+- **Card:** CHAVE-XXX | **PR:** #XXX | **Tipo:** feature | **Sprint:** Sprint 5
 - **Complexidade:** baixa/média/alta
 - **Categoria(s):** Contribuições de Impacto · Aprendizados aplicados
 
@@ -207,7 +205,7 @@ _Sprints: Sprint 4, Sprint 5, Sprint 6_
 ### Sprint 6
 
 #### [2] TÍTULO DA CONTRIBUIÇÃO
-- **Card:** TEAM-XXX | **PR:** #XXX | **Tipo:** melhoria | **Sprint:** Sprint 6
+- **Card:** CHAVE-XXX | **PR:** #XXX | **Tipo:** melhoria | **Sprint:** Sprint 6
 - **Complexidade:** média
 - **Categoria(s):** Colaboração e influência
 
@@ -224,7 +222,7 @@ _Sprints: Sprint 4, Sprint 5, Sprint 6_
 ## Fora do escopo
 
 ### [N] TÍTULO DO CARD
-- **Card:** TEAM-XXX | **Tipo:** ...
+- **Card:** CHAVE-XXX | **Tipo:** ...
 - **Motivo:** tarefa rotineira sem impacto além do ticket
 
 ---

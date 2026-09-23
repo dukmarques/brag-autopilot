@@ -13,14 +13,14 @@ A ideia central é simples: ao fim de cada sprint ou quarter, você roda um comm
 O fluxo é composto por um command orquestrador e duas skills especializadas:
 
 ```
-/brag Q1/26 ADM
+/brag Q1/26
      │
      ├── skill: brag-triage
-     │     ├── Busca cards no Jira (assignee + quarter + time)
+     │     ├── Busca cards no Jira (assignee + quarter)
      │     ├── Cruza com PRs no GitHub (link no card ou título do PR)
      │     ├── Analisa contexto, impacto, complexidade e aprendizados
      │     ├── Classifica por categoria do Documento de Impacto
-     │     └── Gera arquivo ADM_Q1-26.md para revisão
+     │     └── Gera arquivo triagens/Q1-26.md para revisão
      │
      ├── [pausa para você revisar e editar o arquivo]
      │
@@ -75,8 +75,7 @@ cp .brag-config.example .brag-config
 
 NOTION_URL=https://www.notion.so/suaempresa/Documento-de-Impacto-xxx
 JIRA_USER=seu.email@empresa.com
-REPOS_ADM=suaempresa/admin-web,suaempresa/admin-api
-REPOS_APP=suaempresa/app-mobile,suaempresa/app-api
+REPOS=suaempresa/admin-web,suaempresa/admin-api,suaempresa/app-mobile
 ```
 
 > O `.brag-config` é pessoal — não versione se os repositórios forem privados.
@@ -92,44 +91,41 @@ REPOS_APP=suaempresa/app-mobile,suaempresa/app-api
 claude
 
 # Roda a triagem + pausa para revisão + publicação manual
-/brag Q1/26 ADM
+/brag Q1/26
 ```
 
-Após a triagem, o Claude gera o arquivo `ADM_Q1-26.md` e aguarda sua revisão antes de publicar.
+Após a triagem, o Claude gera o arquivo `triagens/Q1-26.md` e aguarda sua revisão antes de publicar.
 
 ### Flags disponíveis
 
 ```bash
 # Publicação automática após triagem, sem pausa
-/brag Q1/26 ADM --publish
+/brag Q1/26 --publish
 
 # Publicar apenas itens específicos (pelos números da triagem)
-/brag Q1/26 ADM --publish --items 1,3,5
+/brag Q1/26 --publish --items 1,3,5
 
 # Simular tudo sem criar nada no Notion
-/brag Q1/26 ADM --dry-run
-
-# Time APP no mesmo quarter
-/brag Q1/26 APP --publish
+/brag Q1/26 --dry-run
 ```
 
 ### Publicação manual (caso queira separar as etapas)
 
 ```bash
 # Só triagem
-/brag-triage Q1/26 2026-01-01 2026-03-31 ADM suaempresa/admin-web
+/brag-triage Q1/26 2026-01-01 2026-03-31 suaempresa/admin-web,suaempresa/app-mobile
 
 # Só publicação (após revisar o arquivo gerado)
-/brag-publish https://notion.so/... Q1/26 ADM
-/brag-publish https://notion.so/... Q1/26 ADM --items 2,4
-/brag-publish https://notion.so/... Q1/26 ADM --dry-run
+/brag-publish https://notion.so/... Q1/26
+/brag-publish https://notion.so/... Q1/26 --items 2,4
+/brag-publish https://notion.so/... Q1/26 --dry-run
 ```
 
 ---
 
 ## Arquivo de triagem
 
-A triagem gera um arquivo `{TEAM}_{QUARTER}.md` na pasta raiz do projeto. Exemplo: `ADM_Q1-26.md`.
+A triagem gera um arquivo `{QUARTER}.md` na pasta `triagens/` do projeto. Exemplo: `triagens/Q1-26.md`.
 
 Você pode editar livremente antes de publicar:
 
@@ -166,8 +162,9 @@ brag-documents/
 ├── .brag-config               # Suas configurações pessoais (não versionar)
 ├── .brag-config.example       # Template de configuração
 ├── README.md                  # Este arquivo
-├── ADM_Q1-26.md               # Gerado pela triagem (ADM, Q1/26)
-├── APP_Q1-26.md               # Gerado pela triagem (APP, Q1/26)
+├── triagens/                  # Arquivos gerados pela triagem
+│   ├── Q1-26.md               # (Q1/26)
+│   └── Q2-26.md               # (Q2/26)
 └── .claude/
     ├── commands/
     │   └── brag.md            # Command orquestrador

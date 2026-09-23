@@ -59,7 +59,6 @@ As demais categorias são adicionadas apenas como valores da propriedade `Escopo
 
 - `$NOTION_URL` — link do Documento de Impacto do usuário (obrigatório, usado para descobrir o contexto)
 - `$QUARTER` — ex: Q1/26
-- `$TEAM` — ex: ADM ou APP
 - `$SPRINT` _(opcional)_ — nome da sprint (ex: Sprint 5). Quando presente, filtra os itens do arquivo de triagem pela sprint informada.
 - `--items` _(opcional)_ — lista de números separados por vírgula para publicar apenas itens específicos (ex: `--items 1,3,5`)
 - `--dry-run` _(opcional)_ — simula a publicação sem criar nada no Notion, útil para validar
@@ -76,15 +75,15 @@ opções válidas de `Período`, `Escopo` e `Sprint`, e IDs de todos os template
 
 ### 2. Leitura do arquivo de triagem
 
-Localize o arquivo gerado pela `brag-triage` no root da pasta atual:
+Localize o arquivo gerado pela `brag-triage` na pasta `triagens/` (no root do projeto):
 
-- Padrão: `TEAM_QUARTER.md` com `/` substituído por `-` (ex: `ADM_Q1-26.md`)
+- Padrão: `triagens/QUARTER.md` com `/` substituído por `-` (ex: `triagens/Q1-26.md`)
 
 Se o arquivo não for encontrado, interrompa e informe:
 
 ```
-Arquivo de triagem não encontrado: ADM_Q1-26.md
-Execute primeiro: /brag-triage $QUARTER $PERIOD_START $PERIOD_END $TEAM $REPOS
+Arquivo de triagem não encontrado: triagens/Q1-26.md
+Execute primeiro: /brag $QUARTER
 ```
 
 O arquivo de triagem agora é **agrupado por sprint**:
@@ -165,7 +164,7 @@ Ao concluir, exiba no terminal:
 
 ```
 ═══════════════════════════════════════════════════
-PUBLICAÇÃO BRAG DOCUMENT — $QUARTER ($TEAM)
+PUBLICAÇÃO BRAG DOCUMENT — $QUARTER
 ═══════════════════════════════════════════════════
 
 Sprint 5:

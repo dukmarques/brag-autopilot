@@ -8,13 +8,12 @@ triagem de entregas via Jira + GitHub → revisão humana → publicação no No
 ## Parâmetros
 
 ```
-/brag $QUARTER $TEAM [--sprint "Sprint 5"] [--publish] [--items 1,3,5] [--dry-run]
+/brag $QUARTER [--sprint "Sprint 5"] [--publish] [--items 1,3,5] [--dry-run]
 ```
 
 | Parâmetro   | Obrigatório | Descrição                                                        |
 | ----------- | ----------- | ---------------------------------------------------------------- |
 | `$QUARTER`  | sim         | Quarter de referência (ex: Q1/26)                                |
-| `$TEAM`     | sim         | Time a processar (ex: ADM ou APP)                                |
 | `--sprint`  | não         | Sprint específica dentro do quarter (ex: `--sprint "Sprint 5"`)  |
 | `--publish` | não         | Avança automaticamente para publicação após a triagem            |
 | `--items`   | não         | Publica apenas itens específicos (ex: `--items 1,3,5`)           |
@@ -34,8 +33,7 @@ Crie o arquivo com o seguinte conteúdo e rode novamente:
 
   NOTION_URL=https://www.notion.so/suaempresa/Documento-de-Impacto-xxx
   JIRA_USER=seu.email@empresa.com
-  REPOS_ADM=empresa/admin-web,empresa/admin-api
-  REPOS_APP=empresa/app-mobile,empresa/app-api
+  REPOS=empresa/admin-web,empresa/admin-api,empresa/app-mobile
 
 Dica: você pode ter um .brag-config por projeto ou um único em ~/.brag-config.
 ```
@@ -44,9 +42,8 @@ Se o arquivo existir, carregue as seguintes chaves:
 
 - `NOTION_URL` — link do Documento de Impacto do usuário no Notion
 - `JIRA_USER` — usuário ou e-mail no Jira
-- `REPOS_{TEAM}` — repositórios do time informado (ex: `REPOS_ADM`, `REPOS_APP`)
-  - Se a chave específica do time não existir, tente `REPOS` como fallback genérico
-  - Se nenhuma chave de repositório for encontrada, interrompa e solicite ao usuário
+- `REPOS` — todos os repositórios GitHub, separados por vírgula
+  - Se a chave não existir, interrompa e solicite ao usuário
 
 ---
 
@@ -77,14 +74,13 @@ skill: brag-triage
   QUARTER:        $QUARTER
   PERIOD_START:   $PERIOD_START
   PERIOD_END:     $PERIOD_END
-  TEAMS:          $TEAM
-  REPOS:          $REPOS_{TEAM}
+  REPOS:          $REPOS
   JIRA_USER:      $JIRA_USER
   SPRINT:         $SPRINT  (se --sprint foi passado; caso contrário, a skill pergunta ao usuário)
 ```
 
-Aguarde a conclusão. A skill criará o arquivo `{TEAM}_{QUARTER}.md`
-(com `/` substituído por `-`) na pasta atual.
+Aguarde a conclusão. A skill criará o arquivo `triagens/{QUARTER}.md`
+(com `/` substituído por `-`), dentro da pasta `triagens/` no root do projeto.
 
 Se a skill falhar ou não encontrar nenhum card, interrompa e informe o usuário.
 
@@ -96,10 +92,10 @@ Após a triagem, exiba a seguinte mensagem e **aguarde input do usuário**:
 
 ```
 ════════════════════════════════════════════════════
-TRIAGEM CONCLUÍDA — $QUARTER ($TEAM)
+TRIAGEM CONCLUÍDA — $QUARTER
 ════════════════════════════════════════════════════
 
-Arquivo gerado: {TEAM}_{QUARTER}.md
+Arquivo gerado: triagens/{QUARTER}.md
 
   X entregas elegíveis para o brag document
   X itens fora do escopo
@@ -131,7 +127,6 @@ Invoque a skill `brag-publish` com os parâmetros:
 skill: brag-publish
   NOTION_URL:   $NOTION_URL  (lido do .brag-config)
   QUARTER:      $QUARTER
-  TEAM:         $TEAM
   SPRINT:       $SPRINT  (se aplicável)
   --items:      [lista informada, se aplicável]
   --dry-run:    [repassar se foi passado no command]
@@ -144,7 +139,7 @@ Aguarde a conclusão e exiba o relatório final da skill.
 ## Comportamento em caso de erros
 
 - **`.brag-config` ausente** → interrompa com instruções de criação (ver acima)
-- **`REPOS_{TEAM}` ausente** → interrompa e solicite o repositório antes de continuar
+- **`REPOS` ausente** → interrompa e solicite o repositório antes de continuar
 - **`NOTION_URL` ausente** → interrompa e solicite o link do Documento de Impacto
 - **Triagem sem resultados** → informe e encerre sem avançar para publicação
 - **Falha parcial na publicação** → exiba o relatório com os erros e os itens publicados com sucesso; não re-execute automaticamente
@@ -155,23 +150,23 @@ Aguarde a conclusão e exiba o relatório final da skill.
 
 ```bash
 # Triagem + pausa para revisão + publicação manual depois
-/brag Q1/26 ADM
+/brag Q1/26
 
 # Filtrar por sprint específica
-/brag Q1/26 ADM --sprint "Sprint 5"
+/brag Q1/26 --sprint "Sprint 5"
 
 # Sprint específica + publicação automática
-/brag Q1/26 ADM --sprint "Sprint 5" --publish
+/brag Q1/26 --sprint "Sprint 5" --publish
 
 # Triagem + publicação automática de tudo
-/brag Q1/26 ADM --publish
+/brag Q1/26 --publish
 
 # Triagem + publicação de itens específicos
-/brag Q1/26 ADM --publish --items 1,3,5
+/brag Q1/26 --publish --items 1,3,5
 
 # Simular tudo sem criar nada
-/brag Q1/26 ADM --dry-run
+/brag Q1/26 --dry-run
 
-# Quarter anterior, time APP
-/brag Q4/25 APP --publish
+# Quarter anterior
+/brag Q4/25 --publish
 ```
