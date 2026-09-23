@@ -16,7 +16,8 @@ O fluxo é um pipeline de três etapas orquestrado por um único command:
 /brag Q1/26 [--sprint "Sprint 5"] [--publish] [--items 1,3,5] [--dry-run]
   │
   ├── skill brag-triage
-  │     Usa: MCP Jira (busca de cards) + GitHub CLI (gh pr list/view/diff)
+  │     Usa: MCP Jira (busca de cards) + GitHub CLI (gh pr list/view/diff, gh search prs --reviewed-by)
+  │          + MCP Notion (leitura do documento de carreira, se CAREER_URL definido)
   │     Pergunta: quarter inteiro ou sprint específica (se --sprint não foi passado)
   │     Saída: arquivo triagens/{QUARTER}.md agrupado por sprint (ex: triagens/Q1-26.md)
   │
@@ -25,8 +26,18 @@ O fluxo é um pipeline de três etapas orquestrado por um único command:
   └── skill brag-publish
         Usa: MCP Notion (fetch do database, criação de páginas, atualização de conteúdo)
         Entrada: arquivo de triagem .md + estrutura do database no Notion
-        Preenche propriedade Sprint em cada página do database
+        Preenche propriedades Sprint e Dimensão em cada página do database
 ```
+
+### Relação com o documento de carreira
+
+Quando `CAREER_URL` está definido, a `brag-triage` lê o ciclo de carreira correspondente ao quarter
+(Q1/Q2 → `AAAA.1`, Q3/Q4 → `AAAA.2`), extrai as dimensões do Engineering Ladders (Tecnologia, Sistema,
+Processo, Pessoas, Influência) com seus status e "Ações para avançar", e converte em **focos** com peso
+(alavanca/atenção = alto, em desenvolvimento = médio, consolidado = baixo). Cada entrega é ligada às
+dimensões e focos que evidencia, e o arquivo ganha as seções `## Contexto de carreira` e `## Cobertura do ciclo`.
+A `brag-publish` usa esse vínculo no campo "Relação com metas" e na propriedade `Dimensão` (que ela cria no
+database se não existir). O documento de carreira é **somente leitura** para as duas skills.
 
 ### Arquivos principais
 
@@ -38,6 +49,7 @@ O fluxo é um pipeline de três etapas orquestrado por um único command:
 
 `.brag-config` (formato key=value, parseado pelo command):
 - `NOTION_URL` — URL da página do Documento de Impacto no Notion
+- `CAREER_URL` — _(opcional)_ URL do documento de Gestão de Carreira no Notion; ativa a relação das entregas com o ciclo atual
 - `JIRA_USER` — e-mail/usuário no Jira para consulta de cards atribuídos
 - `REPOS` — todos os repositórios GitHub, separados por vírgula (ex: `REPOS=org/repo1,org/repo2`). Não há separação por time: o Jira é consultado por todos os cards atribuídos ao `JIRA_USER`, e os PRs são buscados pela chave do card em todos os repositórios
 - `QUARTER_{Q}_{YY}` — override opcional de datas de quarter customizadas
@@ -49,6 +61,10 @@ As três precisam estar conectadas antes de executar:
 - **MCP Notion** — descoberta do database, criação de páginas, atualização de conteúdo
 - **GitHub CLI (`gh`)** — busca, visualização e diff de PRs (não é MCP, roda via shell)
 
+Opcional (recomendada): skill **humanizer** (`humanizer:humanizer`, plugin `blader/humanizer`). Se estiver disponível,
+a `brag-triage` a aplica nos campos de prosa antes de gravar o arquivo, e a `brag-publish` a aplica apenas no texto que
+ela mesma gera ou adapta (ex: "Relação com metas"), preservando o texto vindo da triagem.
+
 ## Categorias do Brag Document
 
 Filtro de elegibilidade: *"Isso gerou impacto além da minha tarefa individual?"*
@@ -59,4 +75,4 @@ Cinco categorias no campo `Escopo` do Notion: Contribuições de Impacto, Colabo
 
 Arquivos de saída ficam na pasta `triagens/` (no root) e seguem o padrão `{QUARTER}.md` com `/` substituído por `-` (ex: `triagens/Q1-26.md`). São gerados pela `brag-triage` e tratados como **somente leitura** pela `brag-publish`. O usuário os edita entre as duas etapas.
 
-O arquivo é **agrupado por sprint**: seção "Elegíveis" usa `### Sprint X` (H3) como delimitador de grupo e `#### [N]` (H4) para cada item. A numeração é sequencial global.
+O arquivo é **agrupado por sprint**: seção "Elegíveis" usa `### Sprint X` (H3) como delimitador de grupo e `#### [N]` (H4) para cada item. A numeração é sequencial global. Depois dos grupos de sprint vêm `### Revisões de código` (reviews relevantes em PRs de outras pessoas) e `### Fora do Jira` (sempre presente, preenchido manualmente pelo usuário com mentorias, tech talks etc.).

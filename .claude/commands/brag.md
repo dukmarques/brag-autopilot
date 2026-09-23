@@ -41,6 +41,8 @@ Dica: você pode ter um .brag-config por projeto ou um único em ~/.brag-config.
 Se o arquivo existir, carregue as seguintes chaves:
 
 - `NOTION_URL` — link do Documento de Impacto do usuário no Notion
+- `CAREER_URL` _(opcional)_ — link do documento de Gestão de Carreira no Notion
+  - Se ausente, o fluxo segue normalmente, sem relacionar as entregas ao ciclo de carreira
 - `JIRA_USER` — usuário ou e-mail no Jira
 - `REPOS` — todos os repositórios GitHub, separados por vírgula
   - Se a chave não existir, interrompa e solicite ao usuário
@@ -76,6 +78,7 @@ skill: brag-triage
   PERIOD_END:     $PERIOD_END
   REPOS:          $REPOS
   JIRA_USER:      $JIRA_USER
+  CAREER_URL:     $CAREER_URL  (se definido no .brag-config)
   SPRINT:         $SPRINT  (se --sprint foi passado; caso contrário, a skill pergunta ao usuário)
 ```
 
@@ -101,8 +104,13 @@ Arquivo gerado: triagens/{QUARTER}.md
   X itens fora do escopo
   X cards sem PR vinculado
 
+Ciclo de carreira: Ciclo AAAA.N (L3 → L4)   ← omitir se não houver CAREER_URL
+  Focos com evidência: X de Y
+  Focos sem evidência de peso alto: P1, T2
+
 Revise o arquivo antes de continuar.
 Edite livremente: ajuste textos, remova itens, mova entre seções.
+Registre em "### Fora do Jira" o que não aparece em cards (mentorias, tech talks, reuniões com Produto).
 
 Quando estiver pronto, escolha:
   [1] Publicar todos os itens elegíveis no Notion

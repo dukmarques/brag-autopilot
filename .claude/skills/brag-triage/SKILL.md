@@ -39,6 +39,7 @@ Você receberá os seguintes parâmetros ao ser invocado:
 - `$PERIOD_END` — data de fim do quarter (ex: 2026-03-31)
 - `$REPOS` — todos os repositórios GitHub, separados por vírgula (ex: suaempresa/admin-web, suaempresa/app-mobile)
 - `$JIRA_USER` — usuário ou e-mail no Jira
+- `$CAREER_URL` _(opcional)_ — link do documento de Gestão de Carreira no Notion. Se ausente, pule a Etapa 0.5 e todos os campos/seções de carreira.
 - `$SPRINT` _(opcional)_ — nome da sprint específica (ex: Sprint 5). Se não fornecido, a skill pergunta ao usuário na Etapa 0.
 
 ---
@@ -62,6 +63,44 @@ Como deseja rastrear as entregas de $QUARTER?
 Se o usuário escolher [2], solicite o nome da sprint e armazene em `$SPRINT`.
 
 O modo escolhido afeta o filtro JQL na Etapa 1 e o formato do arquivo de saída.
+
+---
+
+### 0.5. Contexto de carreira (se `$CAREER_URL` foi fornecido)
+
+O documento de Gestão de Carreira é **somente leitura** — nunca edite essa página.
+
+**a) Identifique o ciclo correspondente ao quarter.** Os ciclos são semestrais:
+
+| Quarter    | Ciclo    |
+| ---------- | -------- |
+| Q1/AA, Q2/AA | `20AA.1` |
+| Q3/AA, Q4/AA | `20AA.2` |
+
+Faça fetch de `$CAREER_URL` e localize a seção `Ciclo 20AA.N`. Se ela não existir,
+use o ciclo mais recente da página e sinalize isso no arquivo de saída.
+
+**b) Extraia do ciclo:**
+- **Nível atual e nível alvo** (ex: L3 → L4), a partir do callout de posição
+- **Status de cada dimensão** (Tecnologia, Sistema, Processo, Pessoas, Influência) na tabela de competências
+- **O que o próximo nível espera** em cada dimensão
+- **"Ações para avançar"** de cada dimensão
+
+**c) Converta o status em peso**, usando o emoji/texto do status:
+
+| Status no documento                  | Peso  |
+| ------------------------------------ | ----- |
+| 🎯 Alavanca / foco para próximo nível | alto  |
+| ⚠️ Ponto de atenção                   | alto  |
+| 🔄 Em desenvolvimento                 | médio |
+| ✅ Consolidado                        | baixo |
+
+**d) Numere cada ação para avançar como um foco**, com prefixo por dimensão:
+`T` Tecnologia · `S` Sistema · `PR` Processo · `P` Pessoas · `I` Influência (ex: `P1`, `P2`, `T3`).
+O foco herda o peso da sua dimensão. Use o texto da ação de forma resumida, sem reescrever o sentido.
+
+Esses focos serão usados na análise (Etapas 3 e 4) e registrados na seção
+`## Contexto de carreira` do arquivo de saída.
 
 ---
 
@@ -104,6 +143,23 @@ Classifique o tipo da entrega com base no card + PR:
 - **hotfix** — correção emergencial em produção
 - **infra** — refactor, CI/CD, dependências, sem impacto direto ao usuário
 
+### 2b. Reviews em PRs de outras pessoas
+
+Reviews feitos em PRs de colegas são a principal evidência de Pessoas e Influência,
+que raramente viram card no Jira. Para cada repositório em `$REPOS`:
+
+```
+gh search prs --reviewed-by=@me --repo $REPO --merged-at "$PERIOD_START..$PERIOD_END" --limit 100 --json number,title,author,url,closedAt
+```
+
+- Descarte PRs de autoria própria e PRs fora do período (ou da sprint, no modo sprint específica)
+- Para cada PR restante, use `gh pr view <número> --repo $REPO --comments --json reviews,comments` e
+  leia **apenas os seus** reviews e comentários
+- Considere relevante quando houver: sugestões técnicas explicadas, discussão de alternativas,
+  contexto ensinado ao autor, identificação de bug/risco antes do merge, ou apoio a pessoas mais júniores
+- Ignore aprovações sem comentário e apontamentos triviais (typo, formatação)
+- Agrupe os reviews relevantes por tema ou por pessoa apoiada — não crie um item por review
+
 ### 3. Análise de cada entrega
 
 Para cada par card + PR, extraia e sintetize:
@@ -132,6 +188,11 @@ Para cada par card + PR, extraia e sintetize:
 - Envolvimento de outros times ou pessoas além do seu squad
 - Decisões tomadas em conjunto
 
+**Relação com o próximo nível** _(apenas com `$CAREER_URL`)_
+- Quais dimensões e focos do ciclo esta entrega evidencia, e por quê
+- Aponte o comportamento concreto que corresponde ao que o próximo nível espera
+  (ex: "dono da operação", "mentoria estruturada", "ADR documentando decisão")
+
 ### 4. Classificação para o Documento de Impacto
 
 Para cada entrega, defina:
@@ -140,6 +201,14 @@ Para cada entrega, defina:
 Aplique o filtro central: *"Isso gerou impacto além da minha tarefa individual?"*
 - Se sim → prossiga com a classificação completa
 - Se não (tarefa rotineira, sem aprendizado ou impacto notável) → marque como `fora do escopo` com justificativa curta
+- _Com `$CAREER_URL`:_ uma entrega no limite da elegibilidade pode ser incluída quando houver
+  **evidência real** de um foco de peso `alto`. A relação com um foco nunca torna elegível,
+  sozinha, uma entrega sem evidência (ex: um PR comum não vira "mentoria").
+
+**Dimensão(ões) e focos do ciclo** _(apenas com `$CAREER_URL`)_:
+- Dimensões: Tecnologia, Sistema, Processo, Pessoas, Influência (pode ser múltipla)
+- Focos: IDs definidos na Etapa 0.5 (ex: `S2`, `P1`). Se a entrega evidencia a dimensão
+  mas nenhuma ação específica, liste só a dimensão.
 
 **Categoria(s) do Notion** (pode ser múltipla):
 - Contribuições de Impacto
@@ -180,6 +249,18 @@ _Sprints: Sprint 4, Sprint 5, Sprint 6_
 - Fora do escopo: X
 - Cards sem PR vinculado: X
 - Sprints encontradas: Sprint 4, Sprint 5, Sprint 6
+- Reviews relevantes em PRs de outras pessoas: X
+
+---
+
+## Contexto de carreira
+_Fonte: Gestão de Carreira — Ciclo 2026.2 · Nível: L3 → L4_
+
+| Foco | Dimensão   | Peso  | Ação para avançar                                    |
+| ---- | ---------- | ----- | ---------------------------------------------------- |
+| P1   | Pessoas    | alto  | Mentoria estruturada com colega (encontros quinzenais) |
+| T1   | Tecnologia | alto  | Escrever o raciocínio técnico próprio antes de usar IA |
+| S1   | Sistema    | baixo | Mapear e documentar integrações críticas             |
 
 ---
 
@@ -191,6 +272,8 @@ _Sprints: Sprint 4, Sprint 5, Sprint 6_
 - **Card:** CHAVE-XXX | **PR:** #XXX | **Tipo:** feature | **Sprint:** Sprint 5
 - **Complexidade:** baixa/média/alta
 - **Categoria(s):** Contribuições de Impacto · Aprendizados aplicados
+- **Dimensão(ões):** Sistema · Tecnologia
+- **Focos do ciclo:** S1 · T1
 
 **Contexto:** ...
 
@@ -202,12 +285,16 @@ _Sprints: Sprint 4, Sprint 5, Sprint 6_
 
 **Sinais de colaboração:** ... _(omitir seção se não houver)_
 
+**Relação com o próximo nível:** ...
+
 ### Sprint 6
 
 #### [2] TÍTULO DA CONTRIBUIÇÃO
 - **Card:** CHAVE-XXX | **PR:** #XXX | **Tipo:** melhoria | **Sprint:** Sprint 6
 - **Complexidade:** média
 - **Categoria(s):** Colaboração e influência
+- **Dimensão(ões):** Processo
+- **Focos do ciclo:** —
 
 **Contexto:** ...
 
@@ -217,6 +304,30 @@ _Sprints: Sprint 4, Sprint 5, Sprint 6_
 
 **Aprendizado:** ...
 
+**Relação com o próximo nível:** ...
+
+### Revisões de código
+
+#### [3] TÍTULO QUE RESUME O APOIO (ex: Revisões técnicas nos PRs de exportação do time)
+- **PRs revisados:** org/repo#XXX (autor), org/repo#YYY (autor) | **Tipo:** review
+- **Categoria(s):** Mentoria e desenvolvimento de pessoas · Colaboração e influência
+- **Dimensão(ões):** Pessoas
+- **Focos do ciclo:** P2
+
+**Contexto:** ...
+
+**O que fiz:** ...
+
+**Impacto:** ...
+
+**Relação com o próximo nível:** ...
+
+### Fora do Jira
+
+_Registre aqui o que não aparece em cards ou PRs: mentorias, tech talks, pair programming,
+reuniões com Produto, refinamentos conduzidos, feedbacks recebidos. Use o mesmo formato dos
+itens acima (continue a numeração) e informe `**Sprint:**` se quiser preencher a sprint no Notion._
+
 ---
 
 ## Fora do escopo
@@ -224,6 +335,18 @@ _Sprints: Sprint 4, Sprint 5, Sprint 6_
 ### [N] TÍTULO DO CARD
 - **Card:** CHAVE-XXX | **Tipo:** ...
 - **Motivo:** tarefa rotineira sem impacto além do ticket
+
+---
+
+## Cobertura do ciclo
+
+| Dimensão      | Peso  | Evidências no período | Focos sem evidência |
+| ------------- | ----- | --------------------- | ------------------- |
+| 🤝 Pessoas     | alto  | [3]                   | P1, P3              |
+| 💻 Tecnologia  | alto  | [1]                   | T2                  |
+| 🏗️ Sistema     | baixo | [1]                   | —                   |
+
+**Sugestões para o próximo período:** 2–3 ações concretas, priorizando focos de peso `alto` sem evidência.
 
 ---
 
@@ -245,8 +368,32 @@ Para publicar apenas itens específicos:
 - A linha `_Sprints:_` lista todas as sprints distintas encontradas nos cards
 - Se houver apenas uma sprint (modo sprint específica), o agrupamento ainda é exibido com um único `### Sprint X`
 - A seção "Fora do escopo" **não** é agrupada por sprint
+- Dentro de "Elegíveis", depois dos grupos de sprint, vêm os grupos `### Revisões de código`
+  (omitir se não houver reviews relevantes) e `### Fora do Jira` (**sempre presente**, vazio, para preenchimento manual)
+- Sem `$CAREER_URL`: omita a seção `## Contexto de carreira`, a seção `## Cobertura do ciclo`,
+  os campos `Dimensão(ões)`, `Focos do ciclo` e `Relação com o próximo nível`
+- A tabela de `## Contexto de carreira` lista **todos** os focos extraídos, ordenados por peso (alto → baixo)
+- Na `## Cobertura do ciclo`, liste as 5 dimensões ordenadas por peso; "Evidências" usa os números dos itens elegíveis
 
-Após criar o arquivo, exiba no terminal apenas o resumo (totais) e o caminho do arquivo gerado.
+### Revisão de escrita (humanizer)
+
+Antes de gravar o arquivo, verifique se a skill `humanizer` (`humanizer:humanizer`) está na lista de skills disponíveis.
+
+- **Se estiver disponível:** invoque-a via Skill tool em **embedded mode** sobre os campos de prosa de cada item —
+  `Contexto`, `O que fiz`, `Impacto`, `Aprendizado`, `Sinais de colaboração`, `Relação com o próximo nível` —
+  e sobre as `Sugestões para o próximo período`. Use o texto final retornado.
+- **Se não estiver disponível:** siga sem ela.
+
+Ao usar o humanizer, instrua-o a:
+- Manter o texto em **português brasileiro**, em primeira pessoa, com tom técnico e neutro
+- **Não alterar a estrutura do arquivo:** headers, rótulos em negrito dos campos (`**Contexto:**`, `**Card:**` etc.),
+  linhas de metadados (Card, PR, Tipo, Sprint, Complexidade, Categoria(s), Dimensão(ões), Focos do ciclo), tabelas,
+  IDs de focos, números de itens, código inline e links
+- **Não adicionar nem remover fatos:** números, nomes de pessoas, chaves de cards, PRs, métricas e datas ficam como estão
+- Manter verbos de contribuição ("contribuí", "conduzi", "propus") e evitar "liderei"
+
+Após criar o arquivo, exiba no terminal apenas o resumo (totais), o caminho do arquivo gerado e uma linha
+`Humanizer: aplicado` ou `Humanizer: não disponível`.
 
 ---
 
@@ -259,3 +406,6 @@ Após criar o arquivo, exiba no terminal apenas o resumo (totais) e o caminho do
 - Se um PR estiver ligado a múltiplos cards, mencione todos
 - Não invente dados: se não encontrar informação suficiente, indique `não encontrado` explicitamente
 - Sinais de colaboração são opcionais — só inclua se houver evidência real nos dados
+- **Nunca edite o documento de Gestão de Carreira** — ele é construído com a liderança e é somente leitura
+- A relação com focos do ciclo exige evidência concreta nos dados (card, PR, review ou comentário); não force vínculo
+- Escreva os textos com verbos de contribuição ("contribuí", "conduzi", "propus"), evitando superlativos

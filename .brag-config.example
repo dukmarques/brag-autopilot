@@ -9,6 +9,11 @@
 # Link do seu Documento de Impacto no Notion
 NOTION_URL=https://www.notion.so/suaempresa/Documento-de-Impacto-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
+# Link do seu documento de Gestão de Carreira no Notion (opcional)
+# Quando presente, a triagem relaciona as entregas aos focos do ciclo atual
+# (alavancas, pontos de atenção e dimensões consolidadas para o próximo nível).
+CAREER_URL=https://www.notion.so/suaempresa/Gestao-de-Carreira-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
 # Seu usuário ou e-mail no Jira
 JIRA_USER=seu.email@empresa.com
 

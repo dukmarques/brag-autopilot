@@ -16,10 +16,13 @@ O fluxo é composto por um command orquestrador e duas skills especializadas:
 /brag Q1/26
      │
      ├── skill: brag-triage
+     │     ├── Lê o ciclo atual do documento de carreira (se CAREER_URL definido)
      │     ├── Busca cards no Jira (assignee + quarter)
      │     ├── Cruza com PRs no GitHub (link no card ou título do PR)
      │     ├── Analisa contexto, impacto, complexidade e aprendizados
+     │     ├── Busca reviews feitos em PRs de outras pessoas
      │     ├── Classifica por categoria do Documento de Impacto
+     │     ├── Relaciona cada entrega às dimensões/focos do ciclo de carreira
      │     └── Gera arquivo triagens/Q1-26.md para revisão
      │
      ├── [pausa para você revisar e editar o arquivo]
@@ -51,6 +54,20 @@ O fluxo é composto por um command orquestrador e duas skills especializadas:
 - MCP **Notion** conectado
 - **GitHub CLI** (`gh`) instalado e autenticado
 
+### Recomendado: skill humanizer
+
+As skills de triagem e publicação usam a [humanizer](https://github.com/blader/humanizer), quando instalada,
+para revisar os textos gerados e remover marcas de escrita de IA (contrastes forçados, frases de efeito,
+exageros, excesso de travessões). Sem ela, o fluxo funciona normalmente, mas os textos saem com mais cara de IA.
+
+Para instalar, no Claude Code:
+
+```bash
+/plugin marketplace add blader/humanizer
+/plugin install humanizer@humanizer
+/reload-plugins
+```
+
 ---
 
 ## Instalação
@@ -74,6 +91,7 @@ cp .brag-config.example .brag-config
 # .brag-config
 
 NOTION_URL=https://www.notion.so/suaempresa/Documento-de-Impacto-xxx
+CAREER_URL=https://www.notion.so/suaempresa/Gestao-de-Carreira-xxx
 JIRA_USER=seu.email@empresa.com
 REPOS=suaempresa/admin-web,suaempresa/admin-api,suaempresa/app-mobile
 ```
@@ -135,6 +153,20 @@ Você pode editar livremente antes de publicar:
 - Alterar categorias ou complexidade
 
 O arquivo é somente leitura para a skill `brag-publish` — suas edições são preservadas.
+
+### Relação com o documento de carreira
+
+Com `CAREER_URL` definido, o arquivo de triagem também traz:
+
+- **`## Contexto de carreira`** — ciclo atual (ex: 2026.2), nível alvo (ex: L3 → L4) e os focos do ciclo
+  (as "Ações para avançar" de cada dimensão), com peso: alavanca/atenção = alto, em desenvolvimento = médio, consolidado = baixo
+- Em cada entrega: **Dimensão(ões)**, **Focos do ciclo** e **Relação com o próximo nível**
+- **`### Revisões de código`** — reviews relevantes que você fez em PRs de outras pessoas (evidência de Pessoas/Influência)
+- **`### Fora do Jira`** — vazio, para você registrar mentorias, tech talks, reuniões com Produto etc.
+- **`## Cobertura do ciclo`** — quais focos têm evidência no período e quais ainda não, com sugestões para o próximo período
+
+Na publicação, a relação com o ciclo preenche o campo "Relação com metas" e a propriedade `Dimensão`
+(criada automaticamente no database se não existir). O documento de carreira nunca é editado.
 
 ---
 
