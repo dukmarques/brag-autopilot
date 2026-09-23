@@ -165,6 +165,9 @@ Com `CAREER_URL` definido, o arquivo de triagem também traz:
 - **`### Fora do Jira`** — vazio, para você registrar mentorias, tech talks, reuniões com Produto etc.
 - **`## Cobertura do ciclo`** — quais focos têm evidência no período e quais ainda não, com sugestões para o próximo período
 
+Para trazer conversas do Discord (ex: suporte a agências) para o `### Fora do Jira`,
+veja [docs/discord.md](docs/discord.md).
+
 Na publicação, a relação com o ciclo preenche o campo "Relação com metas" e a propriedade `Dimensão`
 (criada automaticamente no database se não existir). O documento de carreira nunca é editado.
 
@@ -194,6 +197,10 @@ brag-documents/
 ├── .brag-config               # Suas configurações pessoais (não versionar)
 ├── .brag-config.example       # Template de configuração
 ├── README.md                  # Este arquivo
+├── docs/
+│   └── discord.md             # Exportar conversas do Discord para o "Fora do Jira"
+├── scripts/
+│   └── discord-export.mjs     # Export só leitura de uma categoria de canais
 ├── triagens/                  # Arquivos gerados pela triagem
 │   ├── Q1-26.md               # (Q1/26)
 │   └── Q2-26.md               # (Q2/26)
